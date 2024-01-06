@@ -1,0 +1,231 @@
+﻿@page "/RendaFixa/{SelectedHolder}";
+@inject FixedDepositService FixedDepositService;
+
+<h1>Renda Fixa</h1>
+<h3>@SelectedHolder</h3>
+
+<form class="text-white">
+    <div class="row row-cols-1 fs-5 ms-5">
+
+        <div class="row row-cols-2">
+            <div class="col-sm-2 text-right">
+                <label>Corretora</label>
+            </div>
+            <div class="col-sm-6">
+                <select @bind="institution" class="form-select" style="width:150px;">
+                    @if (financialInstitutions is not null && financialInstitutions.Count() > 0)
+                    {
+                        @foreach (var item in financialInstitutions)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    }
+                    else
+                    {
+                        <option>Sem corretora</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (financialInstitutions.Count() > 0)
+        {
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Empresa</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="company" class="form-control" style="width:25%" type="text" />
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Quantidade</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="amount" class="form-control" style="width:25%" type="number" min="0" />
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Preço</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="priceString" class="form-control" style="width:25%" oninput="formatPriceValue(this)" type="text" min="0" />
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Rentabilidade</label> %
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="profitabilityString" oninput="formatPriceValue(this)" class="form-control" style="width:25%" type="text" min="0" />
+                </div>
+            </div>
+
+
+            <div class="row row-cols-2">
+                <div class="col-sm-2 text-right">
+                    <label>Produto</label>
+                </div>
+                <div class="col-sm-6">
+                    <select @bind="depositsType" class="form-select" style="width:150px;">
+                        @foreach (FixedDepositsType item in FixedDepositService.GetEnumValues<FixedDepositsType>())
+                        {
+                            <option value="@item">@item.ToString()</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row row-cols-2">
+                <div class="col-sm-2 text-right">
+                    <label>Indexador</label>
+                </div>
+                <div class="col-sm-6">
+                    <select @bind="indexType" class="form-select" style="width:150px;">
+                        @foreach (IndexType item in FixedDepositService.GetEnumValues<IndexType>())
+                        {
+                            <option value="@item">@item.ToString()</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Aplicação</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="recordDate" class="form-control" style="width:25%" type="date">
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Vencimento</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="dueDate" class="form-control" style="width:25%" type="date">
+                    <label>
+                        <InputCheckbox @bind-Value="@liquidDateOnDueDate" /> Liquidez no Vencimento
+                    </label>
+                </div>
+            </div>
+
+            @if (!liquidDateOnDueDate)
+            {
+                <div class="row row-cols-2" style="margin-bottom: 15px;">
+                    <div class="col-sm-2 text-right">
+                        <label>Liquidez</label>
+                    </div>
+                    <div class="col-sm-6">
+                        <input @bind-value="liquidityDate" class="form-control" style="width:25%" type="date">
+                    </div>
+                </div>
+            }
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Operação</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="operationDate" class="form-control" style="width:25%" type="date">
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15%;">
+                <div class="col-sm-2 text-right">
+                </div>
+                <div class="col-sm-6 ms-5">
+                    <button @onclick="AddNewFixedDeposit" class="btn btn-success rounded-pill"> &nbsp; Salvar &nbsp; </button>
+                </div>
+            </div>
+        }
+    </div>
+</form>
+
+@code {
+    [Parameter]
+    public string SelectedHolder { get; set; }
+
+    [Parameter]
+    public IReadOnlyCollection<ShareHolder> shareHolders { get; set; }
+
+    [Parameter]
+    public List<FinancialInstitution> financialInstitutions { get; set; } = new();
+
+    private string institution { get; set; }
+    private bool liquidDateOnDueDate = true;
+
+    private string company = string.Empty;
+    private int amount;
+    private decimal price;
+    private string priceString = "0,00";
+    private decimal profitability;
+    private string profitabilityString = "0,00";
+    private FixedDepositsType depositsType;
+    private IndexType indexType;
+    private DateTime liquidityDate = DateTime.Now.AddDays(1);
+    private DateTime recordDate = DateTime.Now;
+    private DateTime dueDate = DateTime.Now.AddDays(2);
+    private DateTime operationDate = DateTime.Now;
+
+    private async Task AddNewFixedDeposit()
+    {
+        FixedDeposit fixedDeposit = new FixedDeposit()
+        {
+            Company = company,
+            Amount = amount,
+            Price = price,
+            Profitability = profitability,
+            FixedDepositsType = depositsType,
+            IndexType = indexType,
+            OperationType = OperationType.Buy,
+            LiquidityDate = liquidityDate,
+            RecordDate = recordDate,
+            DueDate = dueDate,
+            OperationDate = operationDate,
+            FinancialInstitutionId = financialInstitutions.Where(x => x.Name == institution).First().Id
+        };
+
+        bool added = false;
+        try
+        {
+            added = await FixedDepositService.AddAsync(fixedDeposit);
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (shareHolders is null || financialInstitutions.Count() == 0)
+            shareHolders = await FixedDepositService.ListAsync<ShareHolder>(null, x => x.Include(x => x.FinancialInstitutions));
+
+        if (string.IsNullOrWhiteSpace(SelectedHolder))
+            SelectedHolder = shareHolders.FirstOrDefault().Name;
+
+        institution = shareHolders.Select(x => x.FinancialInstitutions.First().Name).First();
+    }
+
+    protected override bool ShouldRender()
+    {
+        decimal.TryParse(priceString, out price);
+        decimal.TryParse(profitabilityString, out profitability);
+
+        Guid holderId = shareHolders.Where(x => x.Name == SelectedHolder).Select(x => x.Id).FirstOrDefault();
+
+        financialInstitutions = shareHolders.FirstOrDefault(x => x.Id == holderId).FinancialInstitutions.ToList();
+
+        if (liquidDateOnDueDate)
+            liquidityDate = dueDate;
+
+        return true;
+    }
+}

@@ -1,0 +1,106 @@
+﻿@page "/Corretora";
+@inject FinancialInstitutionService FinancialInstitutionService;
+
+<h3>Corretora</h3>
+
+<form class="text-white">
+    <div class="row row-cols-1 fs-5 ms-5">
+
+        <div class="row row-cols-2">
+            <div class="col-sm-2 text-right">
+                <label>Acionista</label>
+            </div>
+            <div class="col-sm-6">
+                <select @bind="selectedHolder" style="width:150px;">
+                    @if (shareHolders is not null)
+                    {
+                        @foreach (ShareHolder item in shareHolders)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Nome da corretora</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="name" type="text" />
+            </div>
+        </div>
+
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Agência</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="agency" type="text" />
+            </div>
+        </div>
+
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Conta</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="account" type="text" />
+            </div>
+        </div>
+
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Dígito</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="digit" type="text" />
+            </div>
+        </div>
+
+        <div class="row row-cols-2" style="margin-bottom: 15%;">
+            <div class="col-sm-2 text-right">
+            </div>
+            <div class="col-sm-6 ms-5">
+                <button @onclick="AddNewInstitution" class="btn btn-success">Salvar</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+    [Parameter]
+    public string selectedHolder { get; set; }
+
+    [Parameter]
+    public IReadOnlyCollection<ShareHolder> shareHolders { get; set; }
+
+    private string name = string.Empty;
+    private string agency = string.Empty;
+    private string account = string.Empty;
+    private string digit = string.Empty;
+
+    private async Task AddNewInstitution()
+    {
+        FinancialInstitution institution = new()
+        {
+            Name = name,
+            Agency = agency,
+            Account = account,
+            Digit = digit,
+            ShareHolderId = FinancialInstitutionService.GetHolderIdAsync(shareHolders, selectedHolder)
+        };
+
+        await FinancialInstitutionService.AddAsync(institution);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (shareHolders is null)
+            shareHolders = await FinancialInstitutionService.ListAsync<ShareHolder>();
+
+        if (string.IsNullOrWhiteSpace(selectedHolder))
+            selectedHolder = shareHolders.FirstOrDefault().Name;
+    }
+}

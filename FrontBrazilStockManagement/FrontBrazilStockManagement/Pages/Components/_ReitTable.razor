@@ -1,0 +1,196 @@
+﻿@inject PortfolioFrontService PortfolioService;
+@inject VariableIncomeService VariableIncomeService;
+
+<section class="ftco-section">
+    <div class="container-xxl">
+        <div class="row justify-content-center">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <div class="d-flex justify-content-between align-items-center" style="height: 60px;">
+                        <div class="popup" style="z-index: 1; left: 31%; width: 0; height: 100px;">
+                            <_OperationVariable FinancialInstitutions="@FinancialInstitutions" VariableIncomeCallback="VariableIncomeService.AddNewVariableIncome"></_OperationVariable>
+                        </div>
+                        <h3 class="h5 mb-0">Fundos Imobiliários</h3>
+                        <button onclick="toggleDivVisibility()" class="btn btn-success btn-lg" style="width: 6rem;">Add</button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="table myaccordion table-hover table-dark" id="accordion">
+                            <thead>
+                                <tr>
+                                    <th class="tHead-Personal">Ativo</th>
+                                    <th class="tHead-Personal">Quantidade</th>
+                                    <th class="tHead-Personal">Posição</th>
+                                    <th class="tHead-Personal">Preço Médio</th>
+                                    <th class="tHead-Personal">%Alocação</th>
+                                </tr>
+                            </thead>
+                            @if (PortfolioList != null)
+                            {
+                                @foreach (Portfolio portfolio in PortfolioList)
+                                {
+                                    if (portfolio.InvestmentType is InvestmentType.Reit && portfolio.Quantity is not 0)
+                                    {
+                                        <tbody>
+                                            <tr data-toggle="collapse" data-target="#@VariableIncomeService.GetCollapseReitNumber(ref collapseReit)" aria-expanded="false" aria-controls="@VariableIncomeService.GetCollapseReitNumber(ref collapseReit)" class="collapsed">
+                                                <td class="fw-bold fs-5 tBody-Personal">@portfolio.Code</td>
+                                                <td class="fw-bold fs-5 tBody-Personal">@portfolio.Quantity</td>
+                                                <td class="fw-bold fs-5 tBody-Personal">@(PortfolioService.GetPosition(portfolio.Code, portfolio.Quantity).ToString("C"))</td>
+                                                <td class="fw-bold fs-5 tBody-Personal">@(PortfolioService.GetAveragePrice(portfolio.Total, portfolio.Quantity).ToString("C"))</td>
+                                                <td class="fw-bold fs-5 tBody-Personal">@(PortfolioService.GetAlocation(portfolio.Code, portfolio.Quantity, Patrimony).ToString("F2"))%</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td colspan="6" id="@VariableIncomeService.GetCollapseReitNumber(ref collapseReit, true)" class="collapse acc" data-parent="#accordion">
+                                                    <div class="row row-cols-3">
+
+                                                        <div class="row row-cols-2" style="width: 25%;">
+                                                            <div class="badge text-wrap text-black fs-6" style="width: 50%;">
+                                                                <p>Valorização</p>
+                                                                @((PortfolioService.GetPosition(portfolio.Code, portfolio.Quantity) - portfolio.Total).ToString("C"))
+                                                            </div>
+
+                                                            <div class="badge text-wrap text-black fs-6" style="width: 50%;">
+                                                                <p>Recebido</p>
+                                                                @((PortfolioService.GetPosition(portfolio.Code, portfolio.Quantity) - portfolio.Total).ToString("C"))
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row row-cols-4" style="width: 60%;">
+                                                            <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                                <p>Quantidade</p>
+                                                                <input type="number" class="form-control ms-3 text-center" style="width: 80%;" @bind-value="amount">
+                                                            </div>
+
+                                                            <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                                <p>Preço</p>
+                                                                <input type="text" oninput="formatPriceValue(this)" class="form-control ms-auto text-center" style="width: 100%;" @bind-value="priceString"> <br><br>
+                                                                <input type="checkbox" class="onoffswitch-checkbox" @bind-value="perShare" checked> p/FII &nbsp;
+                                                            </div>
+
+                                                            <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                                <p>Outros Custos</p>
+                                                                @if (perShare)
+                                                                {
+                                                                    <input type="text" oninput="formatPriceValue(this)" min="0" class="form-control ms-3 text-center" style="width: 80%;" @bind-value="otherCostsString">
+                                                                }
+                                                            </div>
+
+                                                            <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                                <p>Data</p>
+                                                                <input type="date" class="form-control text-center" style="width: 100%;" @bind-value="operationDate">
+                                                            </div>
+
+                                                            <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                                <p>Corretora</p>
+                                                                <select @bind="institutionName" class="form-select" style="width:125px;">
+                                                                    @if (FinancialInstitutions != null)
+                                                                    {
+                                                                        @foreach (FinancialInstitution item in FinancialInstitutions)
+                                                                        {
+                                                                            <option value="@item.Name">@item.Name</option>
+                                                                        }
+                                                                    }
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div style="width: 15%;">
+                                                            <div class="row row-cols-2">
+                                                                <button @onclick="() => BuyReit(portfolio)" class="btn btn-success m-1" style="width:45%">Comprar</button>
+                                                                <button @onclick="() => SellReit(portfolio)" class="btn btn-danger m-1" style="width:45%">Vender</button>
+                                                            </div>
+                                                            <NavLink class="btn btn-primary fw-bold mb-2" style="width: 100%;" href="@VariableIncomeService.GetUrlHistoric(portfolio)">
+                                                                <span aria-hidden="true"></span> Detalhes
+                                                            </NavLink>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+                                        </tbody>
+                                    }
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public IEnumerable<Portfolio> PortfolioList { get; set; }
+
+    [Parameter]
+    public decimal Patrimony { get; set; }
+
+    [Parameter]
+    public IReadOnlyCollection<FinancialInstitution> FinancialInstitutions { get; set; }
+
+    private uint collapseReit = 1;
+    private int amount = 0;
+    private decimal price = 0m;
+    private decimal otherCosts = 0m;
+    private string priceString = "0,00";
+    private string otherCostsString = "0,00";
+    private DateTime operationDate = DateTime.Now;
+    private bool perShare = true;
+    private string institutionName = string.Empty;
+    private OperationType operationType;
+
+    protected override void OnParametersSet()
+    {
+        if (FinancialInstitutions != null)
+            institutionName = FinancialInstitutions.Select(x => x.Name).FirstOrDefault();
+    }
+
+    private async Task<bool> BuyReit(Portfolio portfolio)
+    {
+        operationType = OperationType.Buy;
+        return await BuySellReit(portfolio);
+    }
+
+    private async Task<bool> SellReit(Portfolio portfolio)
+    {
+        operationType = OperationType.Sell;
+        return await BuySellReit(portfolio);
+    }
+
+    private async Task<bool> BuySellReit(Portfolio portfolio)
+    {
+        decimal spent = 0m;
+
+        if (perShare)
+            spent = amount * price;
+        else
+        {
+            spent = price;
+            price = Math.Round(spent / amount, 2);
+        }
+
+        Reit reit = new()
+            {
+                Company = portfolio.Company,
+                Code = portfolio.Code,
+                Amount = amount,
+                Price = price,
+                OtherCosts = otherCosts,
+                Total = spent,
+                OperationDate = operationDate,
+                OperationType = operationType,
+                InvestmentType = InvestmentType.Reit,
+                FinancialInstitutionId = FinancialInstitutions.Where(x => x.Name == institutionName).Select(x => x.Id).FirstOrDefault()
+            };
+
+        return await VariableIncomeService.AddNewVariableIncome(reit, portfolio);
+    }
+
+    //public async Task TestCallback(VariableIncome variableIncome)
+    //{
+    //    await VariableIncomeService.AddNewVariableIncome(variableIncome, null);
+    //}
+}

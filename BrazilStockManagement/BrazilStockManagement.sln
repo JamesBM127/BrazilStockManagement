@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrazilStockManagement", "BrazilStockManagement\BrazilStockManagement.csproj", "{A01ADE34-F992-4F3A-A421-96A373D9A961}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrazilStockManagementTests", "BrazilStockManagementTests\BrazilStockManagementTests.csproj", "{E8B59374-7681-4D2C-8A40-583FFBCC0630}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JBMDatabase", "..\..\Personal Nuggets GitHub\JBMDatabase\JBMDatabase\JBMDatabase.csproj", "{C5157A4F-43D4-4303-87B7-F2BAC6702C15}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A01ADE34-F992-4F3A-A421-96A373D9A961}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A01ADE34-F992-4F3A-A421-96A373D9A961}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A01ADE34-F992-4F3A-A421-96A373D9A961}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A01ADE34-F992-4F3A-A421-96A373D9A961}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8B59374-7681-4D2C-8A40-583FFBCC0630}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8B59374-7681-4D2C-8A40-583FFBCC0630}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8B59374-7681-4D2C-8A40-583FFBCC0630}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8B59374-7681-4D2C-8A40-583FFBCC0630}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5157A4F-43D4-4303-87B7-F2BAC6702C15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5157A4F-43D4-4303-87B7-F2BAC6702C15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5157A4F-43D4-4303-87B7-F2BAC6702C15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5157A4F-43D4-4303-87B7-F2BAC6702C15}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D2003B05-137C-4AF5-B607-CD40959181CE}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://dev.azure.com/jamesonbm
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = BrazilStockManagement\\BrazilStockManagement.csproj
+		SccProjectName1 = BrazilStockManagement
+		SccLocalPath1 = BrazilStockManagement
+		SccProjectUniqueName2 = BrazilStockManagementTests\\BrazilStockManagementTests.csproj
+		SccProjectName2 = BrazilStockManagementTests
+		SccLocalPath2 = BrazilStockManagementTests
+		SccProjectUniqueName3 = ..\\..\\Personal\u0020Nuggets\u0020GitHub\\JBMDatabase\\JBMDatabase\\JBMDatabase.csproj
+		SccProjectName3 = ../../Personal\u0020Nuggets\u0020GitHub/JBMDatabase/JBMDatabase
+		SccLocalPath3 = ..\\..\\Personal\u0020Nuggets\u0020GitHub\\JBMDatabase\\JBMDatabase
+	EndGlobalSection
+EndGlobal

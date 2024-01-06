@@ -1,0 +1,187 @@
+﻿@page "/Edit/{InvestmentTypeString}/{Id}";
+@inject EditVariableIncomeService EditVariableIncomeService;
+
+@if (ticket is not null)
+{
+    <h3>@ticket</h3>
+
+    <form class="text-white">
+        <div class="row row-cols-1 fs-5 ms-5">
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Empresa</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="company" class="form-control col-3" type="text" />
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Quantidade</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="amount" class="form-control col-3" type="number" />
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Preço</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="priceString" class="form-control col-3" type="text" oninput="formatPriceValue(this)" />
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15px;">
+                <div class="col-sm-2 text-right">
+                    <label>Data de operação</label>
+                </div>
+                <div class="col-sm-6">
+                    <input @bind-value="operationDate" class="form-control col-3" type="date">
+                </div>
+            </div>
+
+            <div class="row row-cols-2">
+                <div class="col-sm-2 text-right">
+                    <label>Direção</label>
+                </div>
+                <div class="col-sm-6">
+                    <select @bind="operationType" class="form-select" style="width:150px;">
+                        @foreach (OperationType item in EditVariableIncomeService.GetEnumValues<OperationType>())
+                        {
+                            <option value="@item">@item.ToString()</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row row-cols-2">
+                <div class="col-sm-2 text-right">
+                    <label>Corretora</label>
+                </div>
+                <div class="col-sm-6">
+                    <select @bind="institution" class="form-select" style="width:150px;">
+                        @if (financialInstitutions is not null && financialInstitutions.Count() > 0)
+                        {
+                            @foreach (var item in financialInstitutions)
+                            {
+                                <option value="@item.Name">@item.Name</option>
+                            }
+                        }
+                        else
+                        {
+                            <option>Sem corretora</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row row-cols-2" style="margin-bottom: 15%;">
+                <div class="col-sm-2 text-right">
+                </div>
+                <div class="col-sm-6">
+                    <label class="rounded-pill" style="background-color:red;">
+                        &nbsp; <InputCheckbox @bind-Value="@delete" /> Deletar &nbsp;
+                    </label>&nbsp;
+                    @if (delete)
+                    {
+                        <button @onclick="Delete" class="btn btn-danger rounded-pill" style="width:100px;">Confirmar</button>
+                    }
+                    else
+                    {
+                        <button @onclick="Update" class="btn btn-success rounded-pill" style="width:100px;">Salvar</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </form>
+}
+else
+{
+    <h2>Investimento não encontrado</h2>
+}
+
+@code {
+    [Parameter]
+    public string InvestmentTypeString { get; set; }
+    [Parameter]
+    public string Id { get; set; }
+
+    private string ticket;
+    private string company;
+    private int amount;
+    private decimal price;
+    private string priceString;
+    private DateTime operationDate = DateTime.Now;
+    private InvestmentType investmentType;
+    private OperationType operationType;
+    private bool delete = false;
+    private string institution;
+    public IReadOnlyCollection<FinancialInstitution> financialInstitutions;
+
+    private VariableIncome VariableIncome = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        VariableIncome = await EditVariableIncomeService.GetAsync(new Guid(Id), InvestmentTypeString);
+
+        financialInstitutions = await EditVariableIncomeService.GetInstitutionsListAsync();
+        institution = financialInstitutions.Select(x => x.Name).FirstOrDefault();
+
+        if (VariableIncome is not null)
+        {
+            ticket = VariableIncome.Code;
+            company = VariableIncome.Company;
+            amount = VariableIncome.Amount;
+            price = VariableIncome.Price;
+            priceString = VariableIncome.Price.ToString();
+            operationDate = VariableIncome.OperationDate;
+            investmentType = VariableIncome.InvestmentType;
+            operationType = VariableIncome.OperationType;
+        }
+    }
+
+    private List<InvestmentType> GetInvestmentTypes()
+    {
+        List<InvestmentType> investmentTypes = EditVariableIncomeService.GetEnumValues<InvestmentType>();
+        investmentTypes.Remove(InvestmentType.FixedDeposit);
+        return investmentTypes;
+    }
+
+    private async Task Update()
+    {
+        VariableIncome oldVariableIncome = (VariableIncome)VariableIncome.Clone();
+        //VariableIncome oldVariableIncome = VariableIncome.CloneLegacy(VariableIncome);
+
+        VariableIncome.Amount = amount;
+        VariableIncome.Company = company;
+        VariableIncome.Price = price;
+        VariableIncome.OperationDate = operationDate;
+        VariableIncome.InvestmentType = investmentType;
+        VariableIncome.Total = amount * price;
+        VariableIncome.OperationType = operationType;
+        VariableIncome.FinancialInstitution = await EditVariableIncomeService.GetInstitutionAsync(institution);
+        VariableIncome.FinancialInstitutionId = VariableIncome.FinancialInstitution.Id;
+
+        await EditVariableIncomeService.Update(VariableIncome, oldVariableIncome);
+    }
+
+    private async Task Delete()
+    {
+        if (InvestmentTypeString == typeof(Stock).Name)
+            await EditVariableIncomeService.Delete<Stock>(VariableIncome);
+        else if (InvestmentTypeString == typeof(Reit).Name)
+            await EditVariableIncomeService.Delete<Reit>(VariableIncome);
+        else
+            await EditVariableIncomeService.Delete<Options>(VariableIncome);
+    }
+
+    protected override bool ShouldRender()
+    {
+        decimal.TryParse(priceString, out price);
+        return base.ShouldRender();
+    }
+}

@@ -1,0 +1,300 @@
+﻿@page "/Proventos";
+@inject VariableIncomeService VariableIncomeService;
+@inject ReceivedService ReceivedService;
+
+<h3>Proventos</h3>
+
+<div class="row row-cols-1 fs-5 ms-5">
+
+    @*------------------------------ATIVO-------------------------------*@
+    <div class="row row-cols-2 mb-2">
+        <div class="col-sm-2 text-right">
+            <label>Ativo</label>
+        </div>
+        <div class="col-sm-6">
+            <select @bind="variableIncomeSelected" style="width:135px;">
+                @if (isStock && stocks is not null)
+                {
+                    @foreach (var stock in stocks)
+                    {
+                        <option value="@stock">@stock</option>
+                    }
+                }
+                else if (!isStock && reits is not null)
+                {
+                    @foreach (var reit in reits)
+                    {
+                        <option value="@reit">@reit</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    @*--------------------------TIPO DE ATIVO---------------------------*@
+    <div class="row row-cols-2 mb-2">
+        <div class="col-sm-2 text-right">
+            <label>Tipo de ativo</label>
+        </div>
+        <div class="col-sm-6">
+            @if (isStock)
+            {
+                <button @onclick="SetStock" class="btn btn-primary text-white rounded-pill m-1" style="width: 6rem;">Ação</button>
+                <button @onclick="SetReit" class="btn btn-outline-primary text-white rounded-pill m-1" style="width: 6rem;">FII</button>
+            }
+            else
+            {
+                <button @onclick="SetStock" class="btn btn-outline-primary text-white rounded-pill m-1" style="width: 6rem;">Ação</button>
+                <button @onclick="SetReit" class="btn btn-primary text-white rounded-pill m-1" style="width: 6rem;">FII</button>
+            }
+        </div>
+    </div>
+
+    @*-----------------------------PROVENTO-----------------------------*@
+    <div class="row row-cols-2 mb-2">
+        <div class="col-sm-2 text-right">
+            <label>Provento</label>
+        </div>
+        <div class="col-sm-6">
+            @if (dividend)
+            {
+                <button @onclick="SetDividend" class="btn btn-primary text-white rounded-pill m-1" style="width: 6rem;">Dividendo</button>
+                <button @onclick="SetBonification" class="btn btn-outline-primary text-white rounded-pill m-1" style="width: 6rem;">Bonificação</button>
+            }
+            else
+            {
+                <button @onclick="SetDividend" class="btn btn-outline-primary text-white rounded-pill m-1" style="width: 6rem;">Dividendo</button>
+                <button @onclick="SetBonification" class="btn btn-primary text-white rounded-pill m-1" style="width: 6rem;">Bonificação</button>
+            }
+        </div>
+    </div>
+
+    @*----------------------------QUANTIDADE----------------------------*@
+    @if (dividend)
+    {
+        <div class="row row-cols-2 mb-2">
+            <div class="col-sm-2 text-right">
+                <label>Quantidade de Ativos</label>
+            </div>
+            <div class="col-sm-6">
+                @if (setManualAmount)
+                {
+                    <input @bind-value="amount" type="number" style="width:135px;" />
+                }
+                else
+                {
+                    <input @bind="@amount" type="number" style="width:135px;" disabled />
+
+                }
+                <label>
+                    &emsp;<InputCheckbox @bind-Value="setManualAmount" /> Ajustar Quantidade
+                </label>
+            </div>
+        </div>
+    }
+    @*-------------------------------VALOR------------------------------*@
+    <div class="row row-cols-2 mb-2">
+        <div class="col-sm-2 text-right">
+            <label>Valor</label>
+        </div>
+        <div class="col-sm-6">
+            R$ <input @bind-value="value" type="number" style="width:103px;" />
+        </div>
+    </div>
+
+    @*-------------------TIPO DE DIVIDENDO / PROPORÇÃO------------------*@
+    <div class="row row-cols-2 mb-2">
+        @if (dividend)
+        {
+            <div class="col-sm-2 text-right">
+                <label>Tipo de Provento</label>
+            </div>
+            <div class="col-sm-6">
+                <select @bind="dividendType" style="width:135px;">
+                    @foreach (DividendType item in VariableIncomeService.GetEnumValues<IndexType>())
+                    {
+                        <option value="@item">@item.ToString()</option>
+                    }
+                </select>
+            </div>
+        }
+        else
+        {
+            <div class="col-sm-2 text-right">
+                <label>Proporção</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="proportion" type="number" style="width:135px;" /> %
+            </div>
+        }
+    </div>
+
+    @*------------------------------DATA COM----------------------------*@
+    <div class="row row-cols-2 mb-2">
+        <div class="col-sm-2 text-right">
+            <label>Data COM</label>
+        </div>
+        <div class="col-sm-6">
+            <input @bind-value="recordDate" type="date" style="width:135px;">
+            <label>
+                &emsp;<InputCheckbox @bind-Value="definedPaymentDate" /> Data de pagamento definida
+            </label>
+        </div>
+    </div>
+
+    @*---------------------------DATA DE PAGAMENTO----------------------*@
+    @if (definedPaymentDate)
+    {
+        <div class="row row-cols-2 mb-2">
+            <div class="col-sm-2 text-right">
+                <label>Data de Pagamento</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="paymentDate" type="date" style="width:135px;">
+            </div>
+        </div>
+    }
+
+    <div class="row row-cols-2" style="margin-bottom: 15%;">
+        <div class="col-sm-2 text-right">
+        </div>
+        <div class="col-sm-6 ms-5">
+            <button @onclick="AddNewReceived" class="btn btn-success rounded-pill">Salvar</button>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyCollection<Portfolio>? Portfolios { get; set; }
+
+    private List<string>? stocks;
+    private List<string>? reits;
+
+    private string? variableIncomeSelected = string.Empty;
+    private bool dividend = true;
+    private bool isStock = true;
+    private bool definedPaymentDate = true;
+    private bool setManualAmount = false;
+    private int amount;
+    private DividendType dividendType;
+    private decimal value;
+    private decimal proportion;
+    //private InvestmentType investmentType = InvestmentType.Stock;
+    private DateTime recordDate = DateTime.Now;
+    private DateTime exDate = DateTime.Now.AddDays(1);
+    private DateTime? paymentDate = DateTime.Now.AddDays(2);
+
+    private async Task AddNewReceived()
+    {
+        if (amount == 0)
+            return;
+
+        if (!definedPaymentDate)
+            paymentDate = null;
+
+        Guid portfolioId = Portfolios.Where(x => x.Code == variableIncomeSelected).Select(x => x.Id).FirstOrDefault();
+
+        if (dividend)
+        {
+            Dividend dividend = CreateDividendObject(portfolioId);
+            await ReceivedService.AddReceivedAsync(dividend);
+        }
+        else
+        {
+            BonusShare bonusShare = CreateBonusShareObject(portfolioId);
+            await ReceivedService.AddReceivedAsync(bonusShare);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Portfolios is null)
+            Portfolios = await VariableIncomeService.ListAsync();
+
+        variableIncomeSelected = Portfolios.Where(x => x.InvestmentType == InvestmentType.Stock).Select(x => x.Code).FirstOrDefault();
+
+        stocks = SetListOfCodes(InvestmentType.Stock);
+
+        reits = SetListOfCodes(InvestmentType.Reit);
+    }
+
+    protected override bool ShouldRender()
+    {
+        GetAmount();
+        return base.ShouldRender();
+    }
+
+    #region SetConfigs
+    private void SetDividend() => dividend = true;
+
+    private void SetBonification() => dividend = false;
+
+    private void SetStock()
+    {
+        isStock = true;
+        SetVariableIncomeSelected(InvestmentType.Stock);
+    }
+
+    private void SetReit()
+    {
+        isStock = false;
+        SetVariableIncomeSelected(InvestmentType.Reit);
+    }
+
+    private void SetVariableIncomeSelected(InvestmentType investmentType) => 
+        variableIncomeSelected = Portfolios.Where(x => x.InvestmentType == investmentType).Select(y => y.Code).First();
+
+    private Dividend CreateDividendObject(Guid VariableIncomeId)
+    {
+        return new Dividend()
+            {
+                Amount = amount,
+                Value = value,
+                DividendType = dividendType,
+                RecordDate = recordDate,
+                ExDate = exDate,
+                PaymentDate = paymentDate,
+                PortfolioId = VariableIncomeId
+            };
+    }
+
+    private BonusShare CreateBonusShareObject(Guid VariableIncomeId)
+    {
+        return new BonusShare()
+            {
+                Amount = amount,
+                Value = value,
+                Proportion = proportion,
+                RecordDate = recordDate,
+                ExDate = exDate,
+                PaymentDate = paymentDate,
+                PortfolioId = VariableIncomeId
+            };
+    }
+
+    private List<string> SetListOfCodes(InvestmentType investmentType)
+    {
+        List<Portfolio> listOfInvestmentType = Portfolios.Where(x => x.InvestmentType == investmentType).ToList();
+        IEnumerable<IGrouping<string, Portfolio>> grouping = listOfInvestmentType.GroupBy(x => x.Code);
+        List<string> listOfDiferentCodes = new List<string>();
+
+        foreach (IGrouping<string, Portfolio> item in grouping)
+        {
+            listOfDiferentCodes.Add(item.Key);
+        }
+
+        return listOfDiferentCodes;
+    }
+
+    private void GetAmount()
+    {
+        if (!setManualAmount)
+        {
+            amount = Portfolios.Where(x => x.Code == variableIncomeSelected).Select(y => y.Quantity).FirstOrDefault();
+        }
+    }
+
+    #endregion
+}

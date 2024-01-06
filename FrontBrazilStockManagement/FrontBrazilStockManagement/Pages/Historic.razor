@@ -1,0 +1,89 @@
+﻿@page "/Historico/{SelectedHolder}/{InvestmentTypeString}/{VariableIncomeSelected}";
+@inject HistoricService HistoricService;
+
+<h1>@SelectedHolder</h1>
+<h3>Histórico</h3>
+
+<section class="ftco-section">
+    <div class="container">
+
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center mb-5">
+                <h2 class="heading-section">@VariableIncomeSelected</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-wrap">
+                    <table class="table table-bordered table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Quantidade</th>
+                                <th>Preço Unitário</th>
+                                <th>Valor Total</th>
+                                <th>Tipo de Ordem</th>
+                                <th>Data de Negociação</th>
+                                <th>&nbsp;</th>
+                            </tr>
+                        </thead>
+                        @if (variableIncomes is not null)
+                        {
+                            @foreach (VariableIncome variableIncome in variableIncomes)
+                            {
+                                <tbody>
+                                    <tr>
+                                        <td>@variableIncome.Amount</td>
+                                        <td>@((variableIncome.Price).ToString("C"))</td>
+                                        <td>@((variableIncome.Price * variableIncome.Amount).ToString("C"))</td>
+                                        <td>@variableIncome.OperationType</td>
+                                        <td>@variableIncome.OperationDate.ToShortDateString()</td>
+                                        <td>
+                                            <NavLink class="btn btn-primary fw-bold mb-2" style="width: 100%;" href="@HistoricService.GetUrlEditIncome(variableIncome)">
+                                                <span aria-hidden="true"></span> Editar
+                                            </NavLink>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@code {
+    #region Variable and Parameters
+    [Parameter]
+    public IReadOnlyCollection<ShareHolder>? ShareHolders { get; set; }
+
+    [Parameter]
+    public string? SelectedHolder { get; set; }
+
+    [Parameter]
+    public IReadOnlyCollection<Portfolio>? Portfolios { get; set; }
+
+    [Parameter]
+    public string? VariableIncomeSelected { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? InvestmentTypeString { get; set; }
+
+    private ShareHolder? shareHolder;
+    private string futureSelectedHolder = string.Empty;
+    private List<VariableIncome> variableIncomes = null;
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        shareHolder = await HistoricService.GetShareHolderAsync(x => x.Name == SelectedHolder, x => x.Include(y => y.FinancialInstitutions));
+
+        variableIncomes = await HistoricService.ListVariableIncome(VariableIncomeSelected, InvestmentTypeString, shareHolder.FinancialInstitutions);
+        variableIncomes.Sort((x, y) => DateTime.Compare(x.OperationDate, y.OperationDate));
+        variableIncomes.Reverse();
+    }
+}

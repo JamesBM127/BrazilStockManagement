@@ -1,0 +1,19 @@
+﻿@page "/TestComponent"
+
+<div>
+    <input type="text" @bind="@priceString" oninput="formatPriceValue(this)" />
+    <p>Valor em string: @priceString</p>
+    <p>Valor em decimal: @priceDecimal</p>
+</div>
+
+
+@code {
+    private string priceString = "0,00";
+    private decimal priceDecimal = 0m;
+
+    protected override bool ShouldRender()
+    {
+        bool abc = Decimal.TryParse(priceString, out priceDecimal);
+        return base.ShouldRender();
+    }
+}

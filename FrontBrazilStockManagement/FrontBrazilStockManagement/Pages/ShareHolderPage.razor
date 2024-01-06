@@ -1,0 +1,51 @@
+﻿@page "/Acionista"
+@inject ShareHolderService ShareHolderService
+
+<h3>ShareHolder</h3>
+
+<form class="text-white">
+    <div class="row row-cols-1 fs-5 ms-5">
+
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Nome</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="name" type="text" />
+            </div>
+        </div>
+
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right text-wrap">
+                <label>CPF/CNPJ</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="cpfCnpj" type="text" /> (opcional)
+            </div>
+        </div>
+
+        <div class="row row-cols-2" style="margin-bottom: 15%;">
+            <div class="col-sm-2 text-right">
+            </div>
+            <div class="col-sm-6 ms-5">
+                <button @onclick="AddNewShareHolder" class="btn btn-success">Salvar</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+    private string name = string.Empty;
+    private string cpfCnpj = null;
+
+    private async Task AddNewShareHolder()
+    {
+        ShareHolder holder = new()
+        {
+            Name = name,
+            CpfCnpj = cpfCnpj
+        };
+
+        await ShareHolderService.AddAsync(holder);
+    }
+}

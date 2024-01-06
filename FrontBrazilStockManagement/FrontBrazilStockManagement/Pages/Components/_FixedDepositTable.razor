@@ -1,0 +1,121 @@
+﻿@inject PortfolioFrontService PortfolioService;
+
+<section class="ftco-section">
+    <div class="container-xxl">
+        <div class="row justify-content-center">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <div class="row row-cols-1">
+                        <h3 class="h5 mb-4 text-center">Renda Fixa</h3>
+                        <NavLink class="btn btn-success btn-lg position-absolute end-0 mb-2 me-3" style="width: 6rem;" href="@GetFixedDepositUrl()">
+                            <span aria-hidden="true"></span> Add
+                        </NavLink>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="table myaccordion table-hover table-dark" id="accordion">
+                            <thead>
+                                <tr>
+                                    <th class="tHead-Personal">Produto</th>
+                                    <th class="tHead-Personal">Vencimento</th>
+                                    <th class="tHead-Personal">Taxa</th>
+                                    <th class="tHead-Personal">Quantidade</th>
+                                    <th class="tHead-Personal">Preço</th>
+                                    <th class="tHead-Personal">Total</th>
+                                </tr>
+                            </thead>
+                            @if (FixedDeposits != null)
+                            {
+                                @foreach (FixedDeposit fixedDeposit in FixedDeposits)
+                                {
+                                    <tbody>
+                                        <tr data-toggle="collapse" data-target="#@GetCollapseNumber()" aria-expanded="false" aria-controls="@GetCollapseNumber()" class="collapsed">
+                                            <td class="fw-bold fs-5 tBody-Personal">@fixedDeposit.FixedDepositsType</td>
+                                            <td class="fw-bold fs-5 tBody-Personal">@fixedDeposit.DueDate.ToShortDateString()</td>
+                                            @if (fixedDeposit.IndexType == IndexType.CDI_Pre || fixedDeposit.IndexType == IndexType.IPCA_Pre)
+                                            {
+                                                <td class="fw-bold fs-5 tBody-Personal">@fixedDeposit.Profitability% + @fixedDeposit.IndexType</td>
+                                            }
+                                            else
+                                            {
+                                                <td class="fw-bold fs-5 tBody-Personal">@fixedDeposit.Profitability% @fixedDeposit.IndexType</td>
+                                            }
+                                            <td class="fw-bold fs-5 tBody-Personal">@fixedDeposit.Amount</td>
+                                            <td class="fw-bold fs-5 tBody-Personal">@fixedDeposit.Price.ToString("C")</td>
+                                            <td class="fw-bold fs-5 tBody-Personal">@((fixedDeposit.Amount * fixedDeposit.Price).ToString("C"))</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="6" id="@GetCollapseNumber(true)" class="collapse acc bg-dark" data-parent="#accordion">
+                                                <div class="row row-cols-3">
+                                                    <div class="row row-cols-1" style="width: 25%;">
+                                                        <div class="badge text-wrap fs-6" style="margin-top: 8%;">
+                                                            <p>@fixedDeposit.Company</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row row-cols-3" style="width: 65%;">
+                                                        <div class="badge text-wrap fs-6" style="width: 33%;">
+                                                            <p>Compra</p>
+                                                            <p>@fixedDeposit.OperationDate.ToShortDateString()</p>
+                                                        </div>
+                                                        <div class="badge text-wrap fs-6" style="width: 33%;">
+                                                            <p>Emissão</p>
+                                                            <p>@fixedDeposit.RecordDate?.ToShortDateString()</p>
+                                                        </div>
+
+                                                        <div class="badge text-wrap fs-6" style="width: 33%;">
+                                                            <p>Liquidez</p>
+                                                            <p>@fixedDeposit.LiquidityDate?.ToShortDateString()</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style="width: 10%;">
+                                                        <NavLink class="btn btn-primary fw-bold mb-2" style="width: 100%;" href="@($"/Edit/RendaFixa/{fixedDeposit.Id}")">
+                                                            <span aria-hidden="true"></span> Editar
+                                                        </NavLink>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public IReadOnlyCollection<FixedDeposit> FixedDeposits { get; set; }
+
+    [Parameter]
+    public decimal Patrimony { get; set; }
+
+    [Parameter]
+    public string SelectedHolder { get; set; }
+
+    private uint collapseFixedDeposit = 1;
+    private uint qtdBuySell = 0;
+    private decimal priceBuySell = 0m;
+    private DateTime dateBuySell = DateTime.Now;
+
+    private string GetCollapseNumber(bool next = false)
+    {
+        if (next)
+            return "collapseFixedDeposit" + collapseFixedDeposit++.ToString();
+        else
+            return "collapseFixedDeposit" + collapseFixedDeposit.ToString();
+    }
+
+    private string GetFixedDepositUrl()
+    {
+        return $"RendaFixa/{SelectedHolder}";
+    }
+}

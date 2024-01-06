@@ -1,0 +1,231 @@
+﻿@inject PortfolioFrontService PortfolioService;
+@inject VariableIncomeService VariableIncomeService;
+
+<section class="ftco-section">
+    <div class="container-xxl">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-center align-items-center" style="height: 60px;">
+                    <NavLink class="btn btn-success btn-lg position-absolute end-0 mb-2 me-3" style="width: 6rem;" href="@GetOptionUrl()">
+                        <span aria-hidden="true"></span> Add
+                    </NavLink>
+                    <h3 class="h5 mb-0">Opções</h3>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table myaccordion table-hover" id="accordion">
+                        <thead>
+                            <tr>
+                                <th class="tHead-Personal">&nbsp;</th>
+                                <th class="tHead-Personal">Ativo</th>
+                                <th class="tHead-Personal">Quantidade</th>
+                                <th class="tHead-Personal">Posição</th>
+                                <th class="tHead-Personal">Preço Médio</th>
+                                <th class="tHead-Personal">%Alocação</th>
+                            </tr>
+                        </thead>
+                        @if (PortfolioList is not null)
+                        {
+                            @foreach (Portfolio portfolio in PortfolioList)
+                            {
+                                @if (portfolio.Quantity is not 0)
+                                {
+                                    <tbody>
+                                        <tr data-toggle="collapse" data-target="#@VariableIncomeService.GetCollapseOptionsNumber(ref collapseOptions)" aria-expanded="false" aria-controls="@VariableIncomeService.GetCollapseOptionsNumber(ref collapseOptions)" class="collapsed">
+                                            <td class="tBody-Personal">FOTO</td>
+                                            <td class="fw-bold fs-5 tBody-Personal">@portfolio.Code</td>
+                                            <td class="fw-bold fs-5 tBody-Personal">@portfolio.Quantity</td>
+                                            <td class="fw-bold fs-5 tBody-Personal">
+                                                @(PortfolioService.GetPosition(portfolio.Code, portfolio.Quantity).ToString("C"))
+                                            </td>
+                                            <td class="fw-bold fs-5 tBody-Personal">
+                                                @(PortfolioService.GetAveragePrice(portfolio.Total, portfolio.Quantity).ToString("C"))
+                                            </td>
+                                            <td class="fw-bold fs-5 tBody-Personal">
+                                                @(PortfolioService.GetAlocation(portfolio.Code, portfolio.Quantity, Patrimony).ToString("F2"))%
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="6" id="@VariableIncomeService.GetCollapseOptionsNumber(ref collapseOptions, true)" class="collapse acc" data-parent="#accordion">
+                                                <div class="row row-cols-3">
+
+                                                    <div class="row row-cols-2" style="width: 25%;">
+                                                        <div class="badge text-wrap text-black fs-6" style="width: 50%;">
+                                                            <p>Valorização</p>
+                                                            @((PortfolioService.GetPosition(portfolio.Code, portfolio.Quantity) - portfolio.Total).ToString("C"))
+                                                        </div>
+
+                                                        <div class="badge text-wrap text-black fs-6" style="width: 50%;">
+                                                            <p>Recebido</p>
+                                                            @((PortfolioService.GetPosition(portfolio.Code, portfolio.Quantity) - portfolio.Total).ToString("C"))
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row row-cols-4" style="width: 60%;">
+                                                        <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                            <p>Quantidade</p>
+                                                            <input type="number" class="form-control ms-3 text-center" style="width: 80%;" @bind-value="amount"> <br><br>
+                                                            <label>
+                                                                <input type="checkbox" class="onoffswitch-checkbox" @bind-value="oddLot"> Fracionário
+                                                            </label>
+                                                        </div>
+
+                                                        <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                            <p>Preço</p>
+                                                            <input type="text" oninput="formatPriceValue(this)" class="form-control ms-auto text-center" style="width: 100%;" @bind-value="priceString"> <br><br>
+                                                            <label>
+                                                                <input type="checkbox" class="onoffswitch-checkbox" @bind-value="perShare" checked> p/Opção
+                                                            </label>
+                                                        </div>
+
+                                                        <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                            <p>Outros Custos</p>
+                                                            @if (perShare)
+                                                            {
+                                                                <input type="text" oninput="formatPriceValue(this)" min="0" class="form-control ms-3 text-center" style="width: 80%;" @bind-value="otherCostsString">
+                                                            }
+                                                        </div>
+
+                                                        <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                            <p>Data</p>
+                                                            <input type="date" class="form-control text-center" style="width: 100%;" @bind-value="operationDate">
+                                                        </div>
+
+                                                        <div class="badge text-wrap text-black fs-6" style="width: 20%;">
+                                                            <p>Corretora</p>
+                                                            <select @bind="institutionName" class="form-select" style="width:125px;">
+                                                                @if (FinancialInstitutions != null)
+                                                                {
+                                                                    @foreach (FinancialInstitution item in FinancialInstitutions)
+                                                                    {
+                                                                        <option value="@item.Name">@item.Name</option>
+                                                                    }
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style="width: 15%;">
+                                                        <div class="row row-cols-2">
+                                                            <button @onclick="() => BuyOption(portfolio)" class="btn btn-success m-1" style="width:45%">Comprar</button>
+                                                            <button @onclick="() => SellOption(portfolio)" class="btn btn-danger m-1" style="width:45%">Vender</button>
+                                                        </div>
+                                                        <NavLink class="btn btn-primary fw-bold mb-2" style="width: 100%;" href="@VariableIncomeService.GetUrlHistoric(portfolio)">
+                                                            <span aria-hidden="true"></span> Detalhes
+                                                        </NavLink>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+                                }
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+@code {
+    [Parameter]
+    public IEnumerable<Portfolio> PortfolioList { get; set; }
+
+    [Parameter]
+    public decimal Patrimony { get; set; }
+
+    [Parameter]
+    public IReadOnlyCollection<FinancialInstitution> FinancialInstitutions { get; set; }
+
+    [Parameter]
+    public string SelectedHolder { get; set; }
+
+    private uint collapseOptions = 1;
+    private int amount = 0;
+    private int oldAmount = 0;
+    private decimal price = 0m;
+    private string priceString = "0,00";
+    private string otherCostsString = "0,00";
+    private decimal otherCosts = 0m;
+    private DateTime operationDate = DateTime.Now;
+    private bool perShare = true;
+    private bool oddLot = false;
+    private string institutionName = string.Empty;
+    private OperationType operationType;
+
+    private string selectedShare = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (FinancialInstitutions != null)
+            institutionName = FinancialInstitutions.Select(x => x.Name).FirstOrDefault();
+    }
+
+    protected override bool ShouldRender()
+    {
+        decimal.TryParse(priceString, out price);
+        decimal.TryParse(otherCostsString, out otherCosts);
+
+        if (!oddLot)
+        {
+            VariableIncomeService.NormalizeLot(ref amount, ref oldAmount);
+        }
+
+        return base.ShouldRender();
+    }
+
+    private async Task<bool> BuyOption(Portfolio portfolio)
+    {
+        operationType = OperationType.Buy;
+        return await BuySellOption(portfolio);
+    }
+
+    private async Task<bool> SellOption(Portfolio portfolio)
+    {
+        operationType = OperationType.Sell;
+        return await BuySellOption(portfolio);
+    }
+
+    private async Task<bool> BuySellOption(Portfolio portfolio)
+    {
+        decimal spent = 0m;
+
+        if (perShare)
+            spent = amount * price;
+        else
+        {
+            spent = price;
+            price = Math.Round(spent / amount, 2);
+        }
+
+        Options optionFromDb = await VariableIncomeService.GetEntity<Options>(x => x.Code == portfolio.Code);
+
+        Options options = new()
+            {
+                Company = portfolio.Company,
+                Code = portfolio.Code,
+                StockCode = optionFromDb.StockCode,
+                Amount = amount,
+                Price = price,
+                Total = spent,
+                OtherCosts = otherCosts,
+                ExerciseDate = optionFromDb.ExerciseDate,
+                OperationDate = operationDate,
+                OperationType = operationType,
+                DerivativeType = optionFromDb.DerivativeType,
+                InvestmentType = optionFromDb.InvestmentType,
+                FinancialInstitutionId = optionFromDb.FinancialInstitutionId
+            };
+
+        return await VariableIncomeService.AddNewVariableIncome(options, portfolio);
+    }
+
+    private string GetOptionUrl()
+    {
+        return $"Opcoes/{SelectedHolder}";
+    }
+}

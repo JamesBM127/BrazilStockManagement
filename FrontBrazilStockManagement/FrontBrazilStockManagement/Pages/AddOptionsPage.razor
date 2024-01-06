@@ -1,0 +1,235 @@
+﻿@page "/Opcoes/{SelectedHolder}";
+@inject VariableIncomeService VariableIncomeService;
+
+<h1>Opções</h1>
+<h3>@SelectedHolder</h3>
+
+<div class="row row-cols-1 fs-5 ms-5">
+
+    @*-----------------------------DIREÇÃO-----------------------------*@
+    <div class="row row-cols-2 mb-2">
+        <div class="col-sm-2 text-right">
+            <label>Direção</label>
+        </div>
+        <div class="col-sm-6">
+            @if (isBuy)
+            {
+                <button @onclick="SetBuy" class="btn btn-success text-white rounded-pill m-1" style="width: 6rem;">Compra</button>
+                <button @onclick="SetSell" class="btn btn-outline-danger text-white rounded-pill m-1" style="width: 6rem;">Venda</button>
+            }
+            else
+            {
+                <button @onclick="SetBuy" class="btn btn-outline-success text-white rounded-pill m-1" style="width: 6rem;">Compra</button>
+                <button @onclick="SetSell" class="btn btn-danger text-white rounded-pill m-1" style="width: 6rem;">Venda</button>
+            }
+        </div>
+    </div>
+
+    @*-----------------------------CORRETORAS-----------------------------*@
+    <div class="row row-cols-2">
+        <div class="col-sm-2 text-right">
+            <label>Corretora</label>
+        </div>
+        <div class="col-sm-6">
+            <select @bind="institutionName" class="form-select" style="width:150px;">
+                @if (FinancialInstitutions is not null && FinancialInstitutions.Count() > 0)
+                {
+                    @foreach (FinancialInstitution item in FinancialInstitutions)
+                    {
+                        <option value="@item.Name">@item.Name</option>
+                    }
+                }
+                else
+                {
+                    <option>Sem corretora</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (FinancialInstitutions is not null && FinancialInstitutions.Count() > 0)
+    {
+        @*-----------------------------COMPANY-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Empresa</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="company" class="form-control col-3" type="text" />
+            </div>
+        </div>
+
+        @*-------------------------CODIGO DA AÇÃO-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Ação</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="ticket" class="form-control col-3" type="text"/>
+            </div>
+        </div>
+
+        @*--------------------------CODIGO DA OPÇÃO-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Codigo Opção</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="ticketOption" class="form-control col-3" type="text" />
+            </div>
+        </div>
+
+        @*-----------------------------QUANTITY-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Quantidade</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="amount" type="number" min="0" class="form-control col-3" />
+            </div>
+        </div>
+
+        @*-----------------------------PRICE-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Preço</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="priceString" oninput="formatPriceValue(this)" type="text" min="0" class="form-control col-3" />
+            </div>
+        </div>
+
+        @*--------------------------OUTROS CUSTOS-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Outros Custos</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="otherCostsString" oninput="formatPriceValue(this)" type="text" min="0" class="form-control col-3" />
+            </div>
+        </div>
+
+        @*-----------------------------STRIKE-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Strike</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="strikePriceString" oninput="formatPriceValue(this)" type="text" min="0" class="form-control col-3" />
+            </div>
+        </div>
+
+        @*---------------------------STRIKE DATE-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                <label>Data de Exercicio</label>
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="exerciseDate" type="date" class="form-control col-3">
+            </div>
+        </div>
+
+        @*--------------------------OPERATION DATE-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15px;">
+            <div class="col-sm-2 text-right">
+                @if (isBuy)
+                {
+                    <label>Data de Compra</label>
+                }
+                else
+                {
+                    <label>Data de Venda</label>
+                }
+            </div>
+            <div class="col-sm-6">
+                <input @bind-value="operationDate" type="date" class="form-control col-3">
+            </div>
+        </div>
+
+        @*--------------------------SAVE BUTTON-----------------------------*@
+        <div class="row row-cols-2" style="margin-bottom: 15%;">
+            <div class="col-sm-2 text-right">
+            </div>
+            <div class="col-sm-6 ms-5">
+                <button @onclick="AddNewOption" class="btn btn-success rounded-pill"> &nbsp; Salvar &nbsp; </button>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public string SelectedHolder { get; set; }
+
+    public List<FinancialInstitution> FinancialInstitutions { get; set; }
+
+    private string company = string.Empty;
+    private string ticket = string.Empty;
+    private string ticketOption = string.Empty;
+    private int amount;
+    private decimal price;
+    private decimal strikePrice;
+    private decimal otherCosts;
+    private string priceString = "0,00";
+    private string strikePriceString = "0,00";
+    private string otherCostsString = "0,00";
+    private DateTime exerciseDate = DateTime.Now;
+    private DateTime operationDate = DateTime.Now;
+    private OperationType operationType = OperationType.Sell;
+    private DerivativeType derivativeType;
+    private string institutionName = string.Empty;
+    private bool isBuy = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ShareHolder holder = await VariableIncomeService.GetShareHolderAsync(x => x.Name == SelectedHolder, x => x.Include(y => y.FinancialInstitutions));
+        FinancialInstitutions = holder.FinancialInstitutions.ToList();
+        institutionName = FinancialInstitutions.Select(x => x.Name).First();
+    }
+
+    private async Task AddNewOption()
+    {
+        //if (company == null || string.IsNullOrWhiteSpace(company))
+        //    company = ticket;
+
+        Options options = new()
+        {
+            Company = company,
+            Code = ticketOption.ToUpper(),
+            StockCode = ticket.ToUpper(),
+            Amount = amount,
+            Price = price,
+            Total = (amount * price) + otherCosts,
+            Strike = strikePrice,
+            ExerciseDate = exerciseDate,
+            OperationDate = operationDate,
+            OperationType = operationType,
+            DerivativeType = VariableIncomeService.GetDerivativeType(ticketOption),
+            InvestmentType = InvestmentType.Derivative, 
+            FinancialInstitutionId = FinancialInstitutions.Where(x => x.Name == institutionName).First().Id
+        };
+
+        await VariableIncomeService.AddNewVariableIncome<Options>(options);
+    }
+
+    private void SetBuy()
+    {
+        isBuy = true;
+        operationType = OperationType.Buy;
+    }
+
+    private void SetSell()
+    {
+        isBuy = false;
+        operationType = OperationType.Sell;
+    }
+
+    protected override bool ShouldRender()
+    {
+        decimal.TryParse(priceString, out price);
+        decimal.TryParse(strikePriceString, out strikePrice);
+        decimal.TryParse(otherCostsString, out otherCosts);
+        return base.ShouldRender();
+    }
+}

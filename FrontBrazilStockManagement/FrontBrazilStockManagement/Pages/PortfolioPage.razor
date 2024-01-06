@@ -1,0 +1,89 @@
+﻿@page "/Portfolio"
+
+@inject ShareHolderBusiness ShareHolderBusiness;
+@inject PortfolioBusiness PortfolioBusiness;
+@inject ShareHolderService ShareHolderService;
+@inject PortfolioFrontService PortfolioService;
+
+<PageTitle>Acionista</PageTitle>
+
+@if (string.IsNullOrWhiteSpace(selectedHolder))
+{
+    <h1>Selecione um acionista </h1>
+}
+else
+{
+    <h1>@selectedHolder</h1>
+}
+
+<div>
+    <h3>Acionista</h3>
+    <div class="row row-cols-2">
+        <select @bind="futureSelectedHolder" class="form-select col-2">
+            @if (shareHolders is not null)
+            {
+                @foreach (ShareHolder holder in shareHolders)
+                {
+                    <option value="@holder.Name">@holder.Name</option>
+                }
+            }
+        </select>
+        
+        <button @onclick="CallRender" class="btn btn-primary ms-3 col-1">Atualizar</button>
+    </div>
+    <br />
+</div>
+
+<_StockTable PortfolioList="@PortfolioService.GetOnlyStocks(portfolioList)"
+             Patrimony="patrimony"
+             FinancialInstitutions="@financialInstitutions">
+</_StockTable>
+
+<_ReitTable PortfolioList="@PortfolioService.GetOnlyReits(portfolioList)"
+            Patrimony="patrimony"
+            FinancialInstitutions="@financialInstitutions">
+</_ReitTable>
+
+<_FixedDepositTable FixedDeposits="@fixedDeposits"
+                    Patrimony="patrimony"
+                    SelectedHolder="@selectedHolder">
+</_FixedDepositTable>
+
+<_OptionsTable PortfolioList="@PortfolioService.GetOnlyOptions(portfolioList)"
+               Patrimony="patrimony"
+               FinancialInstitutions="@financialInstitutions"
+               SelectedHolder="@selectedHolder">
+</_OptionsTable>
+
+
+@code {
+    private string selectedHolder = string.Empty;
+    private string futureSelectedHolder = string.Empty;
+    public decimal patrimony = 0;
+
+    IReadOnlyCollection<ShareHolder> shareHolders;
+    IReadOnlyCollection<Portfolio> portfolioList;
+    IReadOnlyCollection<FixedDeposit> fixedDeposits;
+    IReadOnlyCollection<FinancialInstitution> financialInstitutions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        shareHolders = await ShareHolderBusiness.ListAsync<ShareHolder>();
+
+        if (shareHolders is not null || shareHolders.Count() > 0)
+            selectedHolder = shareHolders.FirstOrDefault().Name;
+        futureSelectedHolder = selectedHolder;
+
+        await CallRender();
+    }
+
+    private async Task CallRender()
+    {
+        selectedHolder = futureSelectedHolder;
+        portfolioList = await PortfolioService.GetPortfolioListAsync(selectedHolder);
+        fixedDeposits = await PortfolioService.GetFixedDepositListAsync(selectedHolder);
+        financialInstitutions = await PortfolioService.GetInstitutions(selectedHolder);
+        patrimony = PortfolioService.GetPatrimony();
+        ShouldRender();
+    }
+}

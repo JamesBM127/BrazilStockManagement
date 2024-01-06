@@ -1,0 +1,189 @@
+﻿@inject IJSRuntime JS
+
+<div class="popuptext text-white position-fixed" id="myPopup" style="height: 550px; display: flex; justify-content: center; align-items: center;">
+    <div class="position-relative start-50 translate-middle" style="margin-top:300px; height: 420px; width:330px;">
+        <p class="text-white ms-1">Adicionar Transação</p>
+        <hr class="bg-danger border-2 border-top border-danger">
+
+        @*--------------------------------- BUY/SELL BUTTON -------------------------------------*@
+        <div class="row row-cols-1" style="margin-left:15%; width:72%;">
+            <div class="rounded-pill bg-dark">
+                @if (Buying)
+                {
+                    <button @onclick="SetOperationBuy" class="btn btn-primary text-white rounded-pill m-1" style="width: 6rem;">Compra</button>
+                    <button @onclick="SetOperationSell" class="btn btn-outline-danger text-white rounded-pill m-1" style="width: 6rem;">Venda</button>
+                }
+                else
+                {
+                    <button @onclick="SetOperationBuy" class="btn btn-outline-primary text-white rounded-pill m-1" style="width: 6rem;">Compra</button>
+                    <button @onclick="SetOperationSell" class="btn btn-danger text-white rounded-pill m-1" style="width: 6rem;">Venda</button>
+                }
+            </div>
+        </div>
+
+        @*--------------------------------- CODE / COMPANY -------------------------------------*@
+        <div class="row row-cols-2 mt-1" style="height:30px;">
+            <div class="mt-0">
+                <p class="text-white text-left ms-5 mb-0" style="width:100%;">&nbsp; &nbsp; Ativo</p>
+                <input @bind-value="IncomeCode" type="text" maxlength="6" class="ms-4" style="height:30px; width:80%; text-transform: uppercase;" />
+            </div>
+            <div>
+                <p class="text-white text-left ms-4 mb-0" style="width:100%;">Empresa</p>
+                <input @bind-value="IncomeCompany" type="text" min="0" class="mr-3" style="height:30px; width:80%;" />
+            </div>
+        </div>
+
+        @*------------------------------ DATE / QUANTITY ------------------------------*@
+        <div class="row row-cols-2 mt-5" style="height:30px;">
+            <div class="mt-0">
+                <p class="text-white text-left ms-3 mb-0" style="width:100%;">Data da transação</p>
+                <input @bind-value="incomeDate" type="date" class="ms-4" style="height:30px; width:80%;" />
+            </div>
+            <div>
+                <p class="text-white text-left ms-3 mb-0" style="width:100%;">Quantidade</p>
+                <input @bind-value="incomeQuantity" type="number" placeholder="0" min="0" class="mr-3" style="height:30px; width:80%;" />
+            </div>
+        </div>
+
+        @*----------------------------- PRICE / OTHER COSTS ---------------------------*@
+        <div class="row row-cols-2 mt-3" style="margin-top: 30px; height:30px;">
+            <div style="margin-top: 30px;">
+                <p class="text-white text-left ms-5 mb-0" style="width:100%;">&nbsp; &nbsp;Preço</p>
+                <input @bind-value="incomePriceString" type="text" oninput="formatPriceValue(this)" min="0" class="ms-4" style="height:30px; width:80%;" />
+            </div>
+            <div>
+                <p class="text-white text-left ms-3 mb-0" style="margin-top: 30px; width:100%;">Outros custos</p>
+                <input @bind-value="incomeOtherCostsString" type="text" oninput="formatPriceValue(this)" min="0" class="mr-3" style="height:30px; width:80%;" />
+            </div>
+        </div>
+
+        @*----------------------------- TYPE / FINANCIAL INSTITUTION ---------------------------*@
+        <div class="row row-cols-2 mt-5" style="height:30px;">
+            <div style="margin-top: 30px;">
+                <p class="text-white text-left ms-5 mb-0" style="width:100%;">&nbsp; &nbsp; Tipo</p>
+                <div style="text-align:center;">
+                    <label>
+                        <InputRadioGroup Name="investType" @bind-Value="investmentType">
+                            <InputRadio Name="investType" Value="InvestmentType.Stock"/>Ação &nbsp;
+                        </InputRadioGroup>
+                    </label>
+                    <label>
+                        <InputRadioGroup Name="investType" @bind-Value="investmentType">
+                            <InputRadio Name="investType" Value="InvestmentType.Reit" />FII
+                        </InputRadioGroup>
+                    </label>
+                </div>
+            </div>
+            <div>
+                <p class="text-white text-left ms-3 mb-0" style="margin-top: 30px; width:100%;">&nbsp; Corretora</p>
+                <select @bind="institutionName" style="width:125px;">
+                    @if (FinancialInstitutions != null)
+                    {
+                        @foreach (FinancialInstitution item in FinancialInstitutions)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        @*-------------------------------- TOTAL VALUE ---------------------------------*@
+        <div class="border border-5 border-dark" style="margin-top: 80px; height:40px; background-color:#43494D;">
+            <p class="fw-bold mt-1" style="margin-left:25%;">Valor total: @(((incomeQuantity * incomePrice) + incomeOtherCosts).ToString("C"))</p>
+        </div>
+
+        @*-------------------------------- CANCEL / SAVE -------------------------------*@
+        <div class="row row-cols-1 mt-3" style="margin-left:15%; width:72%;">
+            <div>
+                <button onclick="toggleDivVisibility()" class="btn btn-dark m-1 rounded-pill" style="width: 6rem;">Cancelar</button>
+                <button @onclick="SaveIncome" class="btn btn-success m-1 rounded-pill" style="width: 6rem;">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<VariableIncome> VariableStockCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<VariableIncome> VariableReitCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<VariableIncome> VariableIncomeCallback { get; set; }
+
+    [Parameter]
+    public IReadOnlyCollection<FinancialInstitution> FinancialInstitutions { get; set; }
+
+    [Parameter]
+    public string IncomeCode { get; set; }
+
+    [Parameter]
+    public string IncomeCompany { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Buying { get; set; } = true;
+
+    private InvestmentType investmentType = InvestmentType.Stock;
+    private DateTime incomeDate = DateTime.Now;
+    private uint incomeQuantity = 0;
+    private decimal incomePrice = 0m;
+    private string incomePriceString = "0,00";
+    private decimal incomeOtherCosts = 0m;
+    private string incomeOtherCostsString = "0,00";
+
+    private string institutionName = string.Empty;
+
+    public async Task SaveIncome(MouseEventArgs e)
+    {
+        await JS.InvokeVoidAsync("toggleDivVisibility");
+
+        OperationType operationType;
+        if (Buying)
+            operationType = OperationType.Buy;
+        else
+            operationType = OperationType.Sell;
+
+        if (string.IsNullOrWhiteSpace(institutionName))
+            institutionName = FinancialInstitutions.Select(x => x.Name).First();
+
+        VariableIncome variableIncome = new()
+            {
+                InvestmentType = investmentType,
+                Company = IncomeCompany,
+                Code = IncomeCode.ToUpper(),
+                Amount = (int)incomeQuantity,
+                Price = incomePrice,
+                Total = (incomePrice * incomeQuantity) + incomeOtherCosts,
+                OtherCosts = incomeOtherCosts,
+                OperationDate = incomeDate,
+                OperationType = operationType,
+                FinancialInstitutionId = FinancialInstitutions.Where(x => x.Name == institutionName).Select(x => x.Id).FirstOrDefault()
+            };
+
+        await VariableIncomeCallback.InvokeAsync(variableIncome);
+    }
+
+    private void SetOperationBuy()
+    {
+        Buying = true;
+    }
+
+    private void SetOperationSell()
+    {
+        Buying = false;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override bool ShouldRender()
+    {
+        decimal.TryParse(incomePriceString, out incomePrice);
+        decimal.TryParse(incomeOtherCostsString, out incomeOtherCosts);
+        return base.ShouldRender();
+    }
+}
